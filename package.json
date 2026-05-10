@@ -11,7 +11,10 @@
     "migrate": "tsx src/db.ts migrate",
     "sync": "tsx bin/sync-watchlists.ts",
     "snapshot": "tsx bin/snapshot.ts",
-    "typecheck": "tsc --noEmit"
+    "search": "tsx bin/run-search.ts",
+    "category": "tsx bin/run-category.ts",
+    "typecheck": "tsc --noEmit",
+    "web": "npm --prefix web run dev"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

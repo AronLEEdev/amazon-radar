@@ -70,7 +70,15 @@ See [`watchlists/README.md`](watchlists/README.md) for the full file schema.
 
 ```bash
 npm run snapshot         # sync + fetch all active (asin, amazon_domain) targets
+npm run search           # Phase 2: type=search per keyword, auto-add memberships
+npm run category         # Phase 2: type=category per category_id, auto-add memberships
 ```
+
+`search` and `category` only add provenance-tagged memberships; they do not call `type=product` themselves. The next `snapshot` picks up the newly-discovered ASINs.
+
+Useful env vars:
+- `TOP_N=20 npm run search` — top-N hits per keyword (default 10 for search, 50 for category).
+- `SLUG=pet-backpack npm run search` — restrict to one watchlist.
 
 Inspect runs:
 

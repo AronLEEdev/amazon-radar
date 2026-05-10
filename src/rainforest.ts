@@ -15,6 +15,158 @@ export class RainforestError extends Error {
   }
 }
 
+async function callRainforest(params: Record<string, string>): Promise<Record<string, unknown>> {
+  const cfg = loadConfig();
+  const url = new URL(ENDPOINT);
+  url.searchParams.set('api_key', cfg.RAINFOREST_API_KEY);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new RainforestError(`Rainforest ${res.status}: ${body.slice(0, 500)}`, res.status);
+  }
+  return (await res.json()) as Record<string, unknown>;
+}
+
+// ─── Search (type=search) ───────────────────────────────────────────────────
+
+export interface SearchHit {
+  rank: number;
+  asin: string;
+  sponsored: boolean | null;
+  title: string | null;
+  brand: string | null;
+  price_amount: number | null;
+  price_currency: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+  image_url: string | null;
+}
+
+export interface SearchResult {
+  keyword: string;
+  amazon_domain: string;
+  hits: SearchHit[];
+  raw: unknown;
+}
+
+export async function searchProducts(
+  keyword: string,
+  amazonDomain: string,
+): Promise<SearchResult> {
+  const data = await callRainforest({
+    type: 'search',
+    amazon_domain: amazonDomain,
+    search_term: keyword,
+  });
+  const list = (data.search_results ?? []) as Array<Record<string, unknown>>;
+  const hits: SearchHit[] = list.map((r, i) => {
+    const position = (r.position as number | undefined) ?? i + 1;
+    const price = (r.price as Record<string, unknown> | undefined) ?? {};
+    const image = r.image as string | undefined;
+    return {
+      rank: position,
+      asin: String(r.asin ?? ''),
+      sponsored: typeof r.sponsored === 'boolean' ? (r.sponsored as boolean) : null,
+      title: typeof r.title === 'string' ? r.title : null,
+      brand: typeof r.brand === 'string' ? r.brand : null,
+      price_amount:
+        typeof price.value === 'number' && Number.isFinite(price.value)
+          ? (price.value as number)
+          : null,
+      price_currency: typeof price.currency === 'string' ? (price.currency as string) : null,
+      rating: typeof r.rating === 'number' ? (r.rating as number) : null,
+      reviews_count:
+        typeof r.ratings_total === 'number' ? Math.trunc(r.ratings_total as number) : null,
+      image_url: typeof image === 'string' && image.length > 0 ? image : null,
+    };
+  }).filter((h) => h.asin.length === 10);
+  return { keyword, amazon_domain: amazonDomain, hits, raw: data };
+}
+
+// ─── Category lists (type=bestsellers / new_releases / movers_and_shakers) ──
+
+export type CategoryListType = 'bestsellers' | 'new_releases' | 'movers_and_shakers';
+
+export interface CategoryHit {
+  rank: number;
+  asin: string;
+  title: string | null;
+  price_amount: number | null;
+  price_currency: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+  image_url: string | null;
+}
+
+export interface CategoryListResult {
+  category_id: string;
+  category_name: string | null;
+  amazon_domain: string;
+  list_type: CategoryListType;
+  hits: CategoryHit[];
+  raw: unknown;
+}
+
+// Rainforest doesn't expose Amazon's bestsellers/new_releases/movers lists keyed by
+// the public Amazon node ID — those endpoints need Rainforest-internal IDs (or a URL
+// that doesn't combine with amazon_domain). For Phase 2 we just call `type=category`
+// with the Amazon node ID and store the default category browse order. All three
+// `list_type` enum values currently produce the same payload — we keep the column so
+// later versions can swap in true bestseller/new_release endpoints when we get the
+// ID mapping right.
+export async function getCategoryList(
+  categoryId: string,
+  amazonDomain: string,
+  listType: CategoryListType,
+): Promise<CategoryListResult> {
+  const data = await callRainforest({
+    type: 'category',
+    amazon_domain: amazonDomain,
+    category_id: categoryId,
+  });
+  // type=category returns rows under `category_results`.
+  const list = (data.category_results ?? data.results ?? []) as Array<
+    Record<string, unknown>
+  >;
+  const catInfo = (data.category_information ?? data.category) as
+    | Record<string, unknown>
+    | undefined;
+  const categoryName =
+    typeof catInfo?.name === 'string'
+      ? (catInfo.name as string)
+      : typeof catInfo?.title === 'string'
+        ? (catInfo.title as string)
+        : null;
+  const hits: CategoryHit[] = list.map((r, i) => {
+    const position = (r.rank as number | undefined) ?? (r.position as number | undefined) ?? i + 1;
+    const price = (r.price as Record<string, unknown> | undefined) ?? {};
+    const image = r.image as string | undefined;
+    return {
+      rank: position,
+      asin: String(r.asin ?? ''),
+      title: typeof r.title === 'string' ? r.title : null,
+      price_amount:
+        typeof price.value === 'number' && Number.isFinite(price.value)
+          ? (price.value as number)
+          : null,
+      price_currency: typeof price.currency === 'string' ? (price.currency as string) : null,
+      rating: typeof r.rating === 'number' ? (r.rating as number) : null,
+      reviews_count:
+        typeof r.ratings_total === 'number' ? Math.trunc(r.ratings_total as number) : null,
+      image_url: typeof image === 'string' && image.length > 0 ? image : null,
+    };
+  }).filter((h) => h.asin.length === 10);
+  return {
+    category_id: categoryId,
+    category_name: categoryName,
+    amazon_domain: amazonDomain,
+    list_type: listType,
+    hits,
+    raw: data,
+  };
+}
+
 export interface ProductResult {
   target: ProductTarget;
   core: ProductCore;

@@ -8,6 +8,13 @@ Entries are grouped by **major version**; minor/patch work is recorded in the
 
 ## [Unreleased]
 
+### Added — Phase 2 discovery
+- `bin/run-search.ts` (`npm run search`): for each watchlist keyword, calls Rainforest `type=search` and stores top-N organic hits in `search_results`; auto-adds `product_watchlist_memberships` rows with `source_type='keyword_search'` and `source_value=<keyword>`.
+- `bin/run-category.ts` (`npm run category`): for each watchlist category, calls Rainforest `type=category` and stores the default browse results in `category_rank_snapshots`; auto-adds memberships with `source_type='category_rank'`. (Note: Rainforest's amazon.com endpoints don't expose true `bestsellers/new_releases/movers_and_shakers` lists keyed by Amazon node id, so the YAML's `types:` field is currently folded onto a single `bestsellers` row per category.)
+- Migration `002_discovery.sql` adds `search_results` and `category_rank_snapshots`.
+- `bin/snapshot.ts` automatically picks up newly-discovered ASINs on the next run because they appear in `product_watchlist_memberships`.
+- Showcase result: pet-backpack expanded from 10 manual ASINs to 61 distinct `(asin, amazon_domain)` targets across 50 keyword hits + 20 category hits + 13 manual rows.
+
 ### Added
 - Read-only Next.js 15 dashboard under `web/`:
   - Mail.app two-pane shell — grouped+dense left list, tabbed right pane (Trends / Snapshots / Raw / Memberships).
