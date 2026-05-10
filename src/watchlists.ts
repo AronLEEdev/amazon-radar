@@ -29,6 +29,23 @@ const CategoryEntry = z.object({
     .min(1),
 });
 
+const Tracker = z
+  .object({
+    mode: z.enum(['search', 'category']),
+    query: z.string().min(1).optional(),
+    category_id: z.string().min(1).optional(),
+    top_n: z.number().int().positive().max(50).default(10),
+    cooldown_days: z.number().int().min(0).max(30).default(3),
+    max_targets_per_day: z.number().int().positive().max(100).default(15),
+    timezone: z.string().min(1).default('America/Los_Angeles'),
+  })
+  .refine(
+    (t) => (t.mode === 'search' ? !!t.query : !!t.category_id),
+    {
+      message: 'tracker.query is required when mode=search; category_id when mode=category',
+    },
+  );
+
 const WatchlistFile = z.object({
   slug: z.string().regex(SLUG_RE, 'slug must be kebab-case lowercase'),
   name: z.string().min(1),
@@ -37,6 +54,7 @@ const WatchlistFile = z.object({
   asins: z.array(AsinEntry).default([]),
   keywords: z.array(z.string().min(1)).default([]),
   categories: z.array(CategoryEntry).default([]),
+  tracker: Tracker.optional(),
 });
 
 export function loadWatchlists(): ParsedWatchlist[] {
@@ -90,6 +108,7 @@ export function loadWatchlists(): ParsedWatchlist[] {
       asins,
       keywords: wl.keywords,
       categories: wl.categories,
+      tracker: wl.tracker,
     });
   }
   return out;

@@ -68,3 +68,40 @@ export interface OverallStats {
   errors_7d: number;
   last_snapshot_at: Date | null;
 }
+
+export interface TrackerInfo {
+  watchlist_id: string;
+  watchlist_slug: string;
+  watchlist_name: string;
+  amazon_domain: string;
+  mode: 'search' | 'category';
+  query: string | null;
+  category_id: string | null;
+  top_n: number;
+  cooldown_days: number;
+  timezone: string;
+  last_business_day: string | null; // ISO date in tracker timezone
+  last_run_finished_at: Date | null;
+}
+
+export interface LeaderboardRow {
+  asin: string;
+  amazon_domain: string;
+  today_rank: number | null;
+  yesterday_rank: number | null;
+  delta: number | null; // positive = climbed (smaller rank), null = new/unknown/fell off
+  is_today: boolean;
+  is_cooldown: boolean; // present in cooldown window but not today
+  days_on_board: number; // distinct business days appeared in last 30
+  // latest snapshot fields (may be null if never snapshotted)
+  title: string | null;
+  brand: string | null;
+  price_amount: number | null;
+  price_currency: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+  bsr_rank: number | null;
+  in_stock: boolean | null;
+  image_url: string | null;
+  last_captured_at: Date | null;
+}

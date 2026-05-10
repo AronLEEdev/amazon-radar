@@ -48,21 +48,22 @@ async function persistSearch(
   try {
     await client.query('begin');
     const filtered = result.hits
-      .filter((h) => INCLUDE_SPONSORED || !h.sponsored)
+      .filter((h) => (INCLUDE_SPONSORED ? true : h.organic_rank !== null))
       .slice(0, topN);
     for (const h of filtered) {
       await client.query(
         `insert into search_results
-          (run_id, watchlist_id, keyword, amazon_domain, rank, asin, sponsored,
+          (run_id, watchlist_id, keyword, amazon_domain, rank, organic_rank, asin, sponsored,
            title, brand, price_amount, price_currency, rating, reviews_count,
            image_url, raw)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
         [
           runId.toString(),
           watchlistId,
           keyword,
           amazonDomain,
           h.rank,
+          h.organic_rank,
           h.asin,
           h.sponsored,
           h.title,

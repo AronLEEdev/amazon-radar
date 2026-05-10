@@ -81,6 +81,20 @@
     "hoursAgo": "{h}h ago",
     "daysAgo": "{d}d ago"
   },
+  "leaderboard": {
+    "title": "{name} — Top Leaderboard",
+    "source": {
+      "search": "Anchor search",
+      "category": "Anchor category"
+    },
+    "topN": "Top {n}",
+    "cooldown": "{d}-day cooldown",
+    "businessDay": "Business day",
+    "empty": "No leaderboard data yet — run `npm run leaderboard` to populate.",
+    "product": "Product",
+    "vsYest": "vs yest.",
+    "cooldownGroup": "On leaderboard within last {d} days (not today)"
+  },
   "language": {
     "switch": "Language",
     "en": "English",

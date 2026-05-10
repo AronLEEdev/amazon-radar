@@ -81,6 +81,20 @@
     "hoursAgo": "{h} 小时前",
     "daysAgo": "{d} 天前"
   },
+  "leaderboard": {
+    "title": "{name} — 实时榜单",
+    "source": {
+      "search": "锚定关键词",
+      "category": "锚定类目"
+    },
+    "topN": "Top {n}",
+    "cooldown": "{d} 天冷却期",
+    "businessDay": "业务日",
+    "empty": "尚无榜单数据 — 运行 `npm run leaderboard` 以填充。",
+    "product": "商品",
+    "vsYest": "对比昨日",
+    "cooldownGroup": "近 {d} 天上过榜但今日未上"
+  },
   "language": {
     "switch": "语言",
     "en": "English",

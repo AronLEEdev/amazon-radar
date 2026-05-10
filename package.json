@@ -11,6 +11,7 @@
     "migrate": "tsx src/db.ts migrate",
     "sync": "tsx bin/sync-watchlists.ts",
     "snapshot": "tsx bin/snapshot.ts",
+    "leaderboard": "tsx bin/run-leaderboard.ts",
     "search": "tsx bin/run-search.ts",
     "category": "tsx bin/run-category.ts",
     "typecheck": "tsc --noEmit",

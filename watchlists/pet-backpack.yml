@@ -4,6 +4,17 @@ description: Pet carrier backpacks (cat / small dog) on amazon.com — showcase 
 
 amazon_domain: amazon.com
 
+# Phase 2.5 leaderboard tracker. The daily `npm run leaderboard` flow follows
+# the live Amazon top 10 for this query, snapshots only those products (plus a
+# 3-day cooldown), and is idempotent within a business day.
+tracker:
+  mode: search
+  query: "pet backpack"
+  top_n: 10
+  cooldown_days: 3
+  max_targets_per_day: 15
+  timezone: America/Los_Angeles
+
 # Top organic results from Rainforest type=search "pet backpack" on amazon.com
 # (sponsored skipped). Mix of incumbents (high reviews) + emerging listings.
 asins:

@@ -2,6 +2,7 @@ import { Topbar } from '@/components/topbar';
 import { LeftList } from '@/components/left-list';
 import { WatchlistOverview } from '@/components/watchlist-overview';
 import { RightPane } from '@/components/right-pane';
+import { Leaderboard } from '@/components/leaderboard';
 import {
   getMemberships,
   getOverallStats,
@@ -11,9 +12,12 @@ import {
   getSnapshots,
   getWatchlists,
   getLatestRaw,
+  getTrackers,
+  getLeaderboard,
 } from '@/lib/queries';
 import { formatRelative } from '@/lib/format';
 import { getLocale } from 'next-intl/server';
+import type { LeaderboardRow, TrackerInfo } from '@/lib/types';
 
 type Tab = 'trends' | 'snapshots' | 'raw' | 'memberships';
 
@@ -37,12 +41,22 @@ export default async function HomePage({
       : 'trends';
 
   // Always-loaded data for the shell.
-  const [stats, watchlists, products, runs] = await Promise.all([
+  const [stats, watchlists, products, runs, trackers] = await Promise.all([
     getOverallStats(),
     getWatchlists(),
     getProductsByWatchlist(),
     getRecentRuns(8),
+    getTrackers(),
   ]);
+
+  // For each tracker, fetch its leaderboard rows. Skipped when no detail view.
+  const leaderboards: Array<{ tracker: TrackerInfo; rows: LeaderboardRow[] }> = [];
+  if (!asin || !domain) {
+    const boards = await Promise.all(
+      trackers.map(async (t) => ({ tracker: t, rows: await getLeaderboard(t) })),
+    );
+    leaderboards.push(...boards);
+  }
 
   // If a product is selected, load its detail data.
   let detail: Awaited<ReturnType<typeof loadDetail>> = null;
@@ -74,6 +88,17 @@ export default async function HomePage({
           />
         ) : (
           <main className="flex-1 overflow-y-auto scrollbar-thin">
+            {leaderboards.length > 0 && (
+              <div className="mx-auto flex max-w-5xl flex-col gap-5 p-6 pb-0">
+                {leaderboards.map(({ tracker, rows }) => (
+                  <Leaderboard
+                    key={tracker.watchlist_id}
+                    tracker={tracker}
+                    rows={rows}
+                  />
+                ))}
+              </div>
+            )}
             <WatchlistOverview stats={stats} watchlists={watchlists} runs={runs} />
           </main>
         )}

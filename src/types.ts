@@ -26,6 +26,25 @@ export interface ParsedWatchlist {
   asins: ProductTarget[];
   keywords: string[];
   categories: WatchlistCategory[];
+  tracker?: TrackerConfig | undefined;
+}
+
+export type TrackerMode = 'search' | 'category';
+
+export interface TrackerConfig {
+  mode: TrackerMode;
+  query?: string | undefined; // required when mode=search
+  category_id?: string | undefined; // required when mode=category (future)
+  top_n: number;
+  cooldown_days: number;
+  max_targets_per_day: number;
+  timezone: string; // IANA tz, e.g. "America/Los_Angeles"
+}
+
+/** Stable identity for cooldown/idempotency lookups across runs of the same tracker. */
+export function trackerIdentity(watchlistId: string | number, t: TrackerConfig): string {
+  const value = t.mode === 'search' ? (t.query ?? '') : (t.category_id ?? '');
+  return `${watchlistId}:${t.mode}:${value}`;
 }
 
 export interface WatchlistCategory {

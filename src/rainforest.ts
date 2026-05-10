@@ -31,7 +31,15 @@ async function callRainforest(params: Record<string, string>): Promise<Record<st
 // ─── Search (type=search) ───────────────────────────────────────────────────
 
 export interface SearchHit {
+  /** Raw page position from Rainforest (sponsored hits included; counts everything in the SERP). */
   rank: number;
+  /**
+   * 1-based index after filtering out sponsored results. `null` for sponsored hits.
+   * Use this for any "leaderboard" / "top N" semantics — page rank is misleading
+   * because sponsored placements break contiguity (e.g. organic ranks would be
+   * 1, 2, 3 even if their page positions are 1, 2, 4).
+   */
+  organic_rank: number | null;
   asin: string;
   sponsored: boolean | null;
   title: string | null;
@@ -60,27 +68,40 @@ export async function searchProducts(
     search_term: keyword,
   });
   const list = (data.search_results ?? []) as Array<Record<string, unknown>>;
-  const hits: SearchHit[] = list.map((r, i) => {
-    const position = (r.position as number | undefined) ?? i + 1;
-    const price = (r.price as Record<string, unknown> | undefined) ?? {};
-    const image = r.image as string | undefined;
-    return {
-      rank: position,
-      asin: String(r.asin ?? ''),
-      sponsored: typeof r.sponsored === 'boolean' ? (r.sponsored as boolean) : null,
-      title: typeof r.title === 'string' ? r.title : null,
-      brand: typeof r.brand === 'string' ? r.brand : null,
-      price_amount:
-        typeof price.value === 'number' && Number.isFinite(price.value)
-          ? (price.value as number)
-          : null,
-      price_currency: typeof price.currency === 'string' ? (price.currency as string) : null,
-      rating: typeof r.rating === 'number' ? (r.rating as number) : null,
-      reviews_count:
-        typeof r.ratings_total === 'number' ? Math.trunc(r.ratings_total as number) : null,
-      image_url: typeof image === 'string' && image.length > 0 ? image : null,
-    };
-  }).filter((h) => h.asin.length === 10);
+  let organicCounter = 0;
+  const hits: SearchHit[] = list
+    .map((r, i): SearchHit | null => {
+      const asin = String(r.asin ?? '');
+      if (asin.length !== 10) return null;
+      const sponsored =
+        typeof r.sponsored === 'boolean' ? (r.sponsored as boolean) : null;
+      const isSponsored = sponsored === true;
+      const position = (r.position as number | undefined) ?? i + 1;
+      const organic_rank = isSponsored ? null : ++organicCounter;
+      const price = (r.price as Record<string, unknown> | undefined) ?? {};
+      const image = r.image as string | undefined;
+      return {
+        rank: position,
+        organic_rank,
+        asin,
+        sponsored,
+        title: typeof r.title === 'string' ? r.title : null,
+        brand: typeof r.brand === 'string' ? r.brand : null,
+        price_amount:
+          typeof price.value === 'number' && Number.isFinite(price.value)
+            ? (price.value as number)
+            : null,
+        price_currency:
+          typeof price.currency === 'string' ? (price.currency as string) : null,
+        rating: typeof r.rating === 'number' ? (r.rating as number) : null,
+        reviews_count:
+          typeof r.ratings_total === 'number'
+            ? Math.trunc(r.ratings_total as number)
+            : null,
+        image_url: typeof image === 'string' && image.length > 0 ? image : null,
+      };
+    })
+    .filter((h): h is SearchHit => h !== null);
   return { keyword, amazon_domain: amazonDomain, hits, raw: data };
 }
 

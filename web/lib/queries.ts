@@ -1,5 +1,6 @@
 import 'server-only';
 import { getPool } from './db';
+import { loadYamlWatchlists } from './watchlists';
 import type {
   WatchlistRow,
   ProductRow,
@@ -7,6 +8,8 @@ import type {
   MembershipRow,
   RunRow,
   OverallStats,
+  TrackerInfo,
+  LeaderboardRow,
 } from './types';
 
 export async function getOverallStats(): Promise<OverallStats> {
@@ -299,4 +302,203 @@ export async function getRecentRuns(limit = 5): Promise<RunRow[]> {
     [limit],
   );
   return rows;
+}
+
+// ─── Leaderboard (Phase 2.5) ───────────────────────────────────────────────
+
+/**
+ * List all watchlists that have a tracker block. Reads YAML for the tracker
+ * config (avoids fragile DB string parsing of tracker_identity) and joins to
+ * the DB for watchlist_id + last_run metadata.
+ */
+export async function getTrackers(): Promise<TrackerInfo[]> {
+  const yamls = loadYamlWatchlists().filter((w) => !!w.tracker);
+  if (yamls.length === 0) return [];
+
+  const slugs = yamls.map((w) => w.slug);
+  const { rows: wlRows } = await getPool().query<{
+    id: string;
+    slug: string;
+    name: string;
+    amazon_domain: string | null;
+    last_business_day: string | null;
+    last_run_finished_at: Date | null;
+  }>(
+    `with latest_run as (
+       select distinct on (watchlist_id)
+              watchlist_id, business_day::text as last_business_day, finished_at
+         from tracker_runs
+        order by watchlist_id, business_day desc, id desc
+     )
+     select w.id::text, w.slug, w.name, w.amazon_domain,
+            lr.last_business_day, lr.finished_at as last_run_finished_at
+       from watchlists w
+       left join latest_run lr on lr.watchlist_id = w.id
+      where w.slug = any($1::text[])
+      order by w.name`,
+    [slugs],
+  );
+
+  const out: TrackerInfo[] = [];
+  for (const wl of yamls) {
+    const dbRow = wlRows.find((r) => r.slug === wl.slug);
+    if (!dbRow) continue; // sync hasn't run yet for this watchlist
+    const t = wl.tracker!;
+    out.push({
+      watchlist_id: dbRow.id,
+      watchlist_slug: dbRow.slug,
+      watchlist_name: dbRow.name,
+      amazon_domain: wl.amazon_domain ?? dbRow.amazon_domain ?? 'amazon.com',
+      mode: t.mode,
+      query: t.query ?? null,
+      category_id: t.category_id ?? null,
+      top_n: t.top_n,
+      cooldown_days: t.cooldown_days,
+      timezone: t.timezone,
+      last_business_day: dbRow.last_business_day,
+      last_run_finished_at: dbRow.last_run_finished_at,
+    });
+  }
+  return out;
+}
+
+/**
+ * Today's leaderboard with rank deltas vs yesterday and latest snapshot data.
+ * Includes cooldown ASINs (present in last cooldown_days but not today).
+ *
+ * Scoped on watchlist_id (P3) and uses organic_rank (P4) and
+ * business_day(captured_at, tz) (P5).
+ */
+export async function getLeaderboard(
+  tracker: Pick<
+    TrackerInfo,
+    'watchlist_id' | 'amazon_domain' | 'mode' | 'query' | 'top_n' | 'cooldown_days' | 'timezone'
+  >,
+): Promise<LeaderboardRow[]> {
+  if (tracker.mode !== 'search' || !tracker.query) return [];
+  const { rows } = await getPool().query<{
+    asin: string;
+    amazon_domain: string;
+    today_rank: number | null;
+    yesterday_rank: number | null;
+    is_today: boolean;
+    is_cooldown: boolean;
+    days_on_board: number;
+    title: string | null;
+    brand: string | null;
+    price_amount: string | null;
+    price_currency: string | null;
+    rating: string | null;
+    reviews_count: number | null;
+    bsr_rank: number | null;
+    in_stock: boolean | null;
+    image_url: string | null;
+    last_captured_at: Date | null;
+  }>(
+    `
+    with bounds as (
+      select business_day(now(), $4) as today,
+             business_day(now(), $4) - $5::int as floor
+    ),
+    sr_window as (
+      select asin, organic_rank, captured_at,
+             business_day(captured_at, $4) as bd
+        from search_results
+       where watchlist_id = $1
+         and amazon_domain = $2
+         and keyword = $3
+         and organic_rank is not null
+    ),
+    today as (
+      select asin, organic_rank as today_rank
+        from sr_window, bounds
+       where sr_window.bd = bounds.today
+         and sr_window.organic_rank <= $6
+    ),
+    yest as (
+      select asin, organic_rank as yesterday_rank
+        from sr_window, bounds
+       where sr_window.bd = bounds.today - 1
+         and sr_window.organic_rank <= $6
+    ),
+    cooldown as (
+      select sr_window.asin
+        from sr_window, bounds
+       where sr_window.bd >= bounds.floor
+         and sr_window.bd < bounds.today
+         and sr_window.organic_rank <= $6
+       group by sr_window.asin
+    ),
+    days_on as (
+      select asin, count(distinct bd) as days_on_board
+        from sr_window, bounds
+       where sr_window.bd >= bounds.today - 30
+         and sr_window.organic_rank <= $6
+       group by asin
+    ),
+    latest_snap as (
+      select distinct on (asin)
+             asin, captured_at, price_amount, price_currency, rating,
+             reviews_count, bsr_rank, in_stock,
+             raw->'product'->'main_image'->>'link' as image_url
+        from product_snapshots
+       where amazon_domain = $2
+       order by asin, captured_at desc
+    ),
+    union_set as (
+      select asin from today
+      union
+      select asin from cooldown
+    )
+    select u.asin, $2::text as amazon_domain,
+           t.today_rank, y.yesterday_rank,
+           (t.asin is not null) as is_today,
+           (t.asin is null and exists (select 1 from cooldown c where c.asin = u.asin)) as is_cooldown,
+           coalesce(d.days_on_board, 0)::int as days_on_board,
+           p.title, p.brand,
+           ls.price_amount, ls.price_currency, ls.rating, ls.reviews_count,
+           ls.bsr_rank, ls.in_stock, ls.image_url,
+           ls.captured_at as last_captured_at
+      from union_set u
+      left join today t using (asin)
+      left join yest y using (asin)
+      left join days_on d using (asin)
+      left join products p on p.asin = u.asin and p.amazon_domain = $2
+      left join latest_snap ls on ls.asin = u.asin
+     order by (t.asin is not null) desc,
+              t.today_rank asc nulls last,
+              y.yesterday_rank asc nulls last
+    `,
+    [
+      tracker.watchlist_id,
+      tracker.amazon_domain,
+      tracker.query,
+      tracker.timezone,
+      tracker.cooldown_days,
+      tracker.top_n,
+    ],
+  );
+  return rows.map((r) => ({
+    asin: r.asin,
+    amazon_domain: r.amazon_domain,
+    today_rank: r.today_rank !== null ? Number(r.today_rank) : null,
+    yesterday_rank: r.yesterday_rank !== null ? Number(r.yesterday_rank) : null,
+    delta:
+      r.today_rank !== null && r.yesterday_rank !== null
+        ? Number(r.yesterday_rank) - Number(r.today_rank)
+        : null,
+    is_today: r.is_today,
+    is_cooldown: r.is_cooldown,
+    days_on_board: Number(r.days_on_board),
+    title: r.title,
+    brand: r.brand,
+    price_amount: r.price_amount !== null ? Number(r.price_amount) : null,
+    price_currency: r.price_currency,
+    rating: r.rating !== null ? Number(r.rating) : null,
+    reviews_count: r.reviews_count,
+    bsr_rank: r.bsr_rank,
+    in_stock: r.in_stock,
+    image_url: r.image_url,
+    last_captured_at: r.last_captured_at,
+  }));
 }
