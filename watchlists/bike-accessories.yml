@@ -1,0 +1,30 @@
+slug: bike-accessories
+name: Bike Accessories
+description: Bike mounts, lights, bags, tools, cycling gear
+
+# Default marketplace for ASINs in this file. Per-ASIN override below wins.
+amazon_domain: amazon.com
+
+# Week 1: ingested as source_type=manual_asin.
+# Two entry forms:
+#   - "B0XXXXXXXX"                              (uses watchlist's amazon_domain)
+#   - { asin: "B0XXXXXXXX", amazon_domain: "amazon.co.uk" }   (per-ASIN override)
+asins:
+  # TODO: replace placeholders below with real ASINs before running snapshot
+  - B07CSZHHZ7    # placeholder — Quad Lock-style phone mount
+  - B07VW7H1T2    # placeholder
+  - asin: B08L8KNYDH
+    amazon_domain: amazon.co.uk
+
+# Phase 2 — search discovery (not yet implemented)
+keywords:
+  - bike phone mount
+  - cycling gloves
+  - bike tail light
+  - gravel bike bag
+
+# Phase 2 — category bestseller / new release / movers crawl
+categories:
+  - id: "3403201"
+    name: Cycling Accessories
+    types: [bestsellers, new_releases, movers_and_shakers]
