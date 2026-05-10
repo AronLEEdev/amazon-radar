@@ -136,6 +136,25 @@ select source_type, count(*)
  group by source_type;
 ```
 
+## Web UI
+
+A read-only Next.js dashboard lives under [`web/`](web/). Mail.app two-pane shell: grouped product list on the left, header + tabbed detail (Trends / Snapshots / Raw / Memberships) on the right. Empty state shows per-watchlist rollup cards and recent runs. shadcn-light theme with DataPulse-style cards. `next-intl` powers `en` + `zh` from day 1.
+
+```bash
+cd web
+npm install
+# .env.local is already symlinked to ../.env so DATABASE_URL is shared with the scraper
+npm run dev          # http://localhost:3210
+```
+
+Switch language via the toggle in the top right; URL becomes `/zh` for Chinese, `/` for English (default).
+
+Routes:
+- `/` — watchlist overview (no selection)
+- `/?asin=B07...&domain=amazon.com` — product detail
+- `/?asin=...&domain=...&tab=snapshots` — deep-link to a tab
+- `/zh`, `/zh?asin=...` — same in Chinese
+
 ## Roadmap
 
 - **Week 2** — trend queries / charts (schema already supports).

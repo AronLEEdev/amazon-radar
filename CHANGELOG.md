@@ -9,7 +9,14 @@ Entries are grouped by **major version**; minor/patch work is recorded in the
 ## [Unreleased]
 
 ### Added
-- (in progress)
+- Read-only Next.js 15 dashboard under `web/`:
+  - Mail.app two-pane shell — grouped+dense left list, tabbed right pane (Trends / Snapshots / Raw / Memberships).
+  - Per-watchlist rollup cards + recent runs as the empty-state home.
+  - 4 sparkline charts (price, reviews, rating, BSR-inverted) on Trends; raw JSON viewer with copy.
+  - Brand mark + DataPulse-flavored shadcn-light theme (blue `#3b82f6`, violet `#8b5cf6`, rounded-xl cards, soft borders).
+  - Deep-linkable selection and tabs via URL search params (no client state).
+- `next-intl` i18n with `en` and `zh` locale bundles; `/zh` prefix for Chinese, default English unprefixed.
+- Showcase niche `pet-backpack` with 10 real ASINs from Rainforest type=search "pet backpack" — Texsens, Morpilot, Pecute, Cawypety, plus emerging listings.
 
 ## [0.1.0] - 2026-05-10
 

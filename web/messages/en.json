@@ -1,0 +1,89 @@
+{
+  "brand": {
+    "name": "Amazon Radar",
+    "tagline": "Niche-agnostic Amazon product radar"
+  },
+  "shell": {
+    "search": "Search products…",
+    "noWatchlists": "No watchlists yet — add a YAML file under /watchlists",
+    "noProducts": "No products in this watchlist yet",
+    "lastSnapshot": "Last snapshot",
+    "neverSnapshotted": "Never snapshotted",
+    "products": "products",
+    "watchlists": "watchlists",
+    "marketplaces": "marketplaces",
+    "errors7d": "errors (7d)",
+    "snapshots": "snapshots",
+    "selectToView": "Select a product to view details",
+    "watchlistOverview": "Watchlists",
+    "recentRuns": "Recent runs",
+    "viewAll": "View all"
+  },
+  "product": {
+    "tabs": {
+      "trends": "Trends",
+      "snapshots": "Snapshots",
+      "raw": "Raw JSON",
+      "memberships": "Memberships"
+    },
+    "metrics": {
+      "price": "Price",
+      "reviews": "Reviews",
+      "rating": "Rating",
+      "bsr": "BSR",
+      "inStock": "In stock",
+      "outOfStock": "Out of stock"
+    },
+    "openOnAmazon": "Open on Amazon",
+    "noSnapshots": "No snapshots yet",
+    "needMoreData": "Need at least 2 snapshots to show a trend — re-run later.",
+    "snapshotsTable": {
+      "capturedAt": "Captured at",
+      "price": "Price",
+      "rating": "Rating",
+      "reviews": "Reviews",
+      "bsr": "BSR"
+    },
+    "membership": {
+      "watchlist": "Watchlist",
+      "source": "Source",
+      "addedAt": "Added",
+      "manual_asin": "Manual",
+      "keyword_search": "Keyword",
+      "category_rank": "Category",
+      "related": "Related",
+      "manual_other": "Manual"
+    }
+  },
+  "watchlistCard": {
+    "products": "{count, plural, =0 {no products} =1 {1 product} other {# products}}",
+    "priceRange": "Price",
+    "avgRating": "Avg rating",
+    "bsrRange": "BSR range",
+    "topMovers": "Highlights"
+  },
+  "runs": {
+    "source": {
+      "product": "Product",
+      "search": "Search",
+      "category": "Category",
+      "reviews": "Reviews",
+      "offers": "Offers",
+      "sync": "Sync"
+    },
+    "summary": "{success}/{total} ok",
+    "withErrors": "{success}/{total} ok · {errors} errors",
+    "noRuns": "No runs yet"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{m}m ago",
+    "hoursAgo": "{h}h ago",
+    "daysAgo": "{d}d ago"
+  },
+  "language": {
+    "switch": "Language",
+    "en": "English",
+    "zh": "中文"
+  }
+}

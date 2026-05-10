@@ -1,5 +1,7 @@
 node_modules/
 dist/
+.next/
+out/
 .env
 .env.*.local
 logs/
@@ -8,3 +10,9 @@ logs/
 .vscode/
 .idea/
 coverage/
+
+# Visual brainstorming companion artifacts (mockups + state)
+.superpowers/
+
+# MCP local config (may contain tokens)
+.mcp.json

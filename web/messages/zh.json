@@ -1,0 +1,89 @@
+{
+  "brand": {
+    "name": "Amazon Radar",
+    "tagline": "通用型亚马逊商品雷达"
+  },
+  "shell": {
+    "search": "搜索商品…",
+    "noWatchlists": "尚未配置观察列表 — 请在 /watchlists 下添加 YAML 文件",
+    "noProducts": "该观察列表暂无商品",
+    "lastSnapshot": "最近抓取",
+    "neverSnapshotted": "尚未抓取",
+    "products": "件商品",
+    "watchlists": "个观察列表",
+    "marketplaces": "个站点",
+    "errors7d": "错误（7天）",
+    "snapshots": "次快照",
+    "selectToView": "选择左侧商品查看详情",
+    "watchlistOverview": "观察列表",
+    "recentRuns": "最近抓取记录",
+    "viewAll": "查看全部"
+  },
+  "product": {
+    "tabs": {
+      "trends": "趋势",
+      "snapshots": "历史",
+      "raw": "原始数据",
+      "memberships": "归属"
+    },
+    "metrics": {
+      "price": "价格",
+      "reviews": "评论数",
+      "rating": "评分",
+      "bsr": "BSR",
+      "inStock": "有货",
+      "outOfStock": "缺货"
+    },
+    "openOnAmazon": "在 Amazon 打开",
+    "noSnapshots": "暂无快照",
+    "needMoreData": "至少需要 2 次快照才能显示趋势 — 稍后再次运行。",
+    "snapshotsTable": {
+      "capturedAt": "采集时间",
+      "price": "价格",
+      "rating": "评分",
+      "reviews": "评论数",
+      "bsr": "BSR"
+    },
+    "membership": {
+      "watchlist": "观察列表",
+      "source": "来源",
+      "addedAt": "加入时间",
+      "manual_asin": "手动添加",
+      "keyword_search": "关键词搜索",
+      "category_rank": "类目榜单",
+      "related": "相关商品",
+      "manual_other": "手动"
+    }
+  },
+  "watchlistCard": {
+    "products": "{count, plural, =0 {暂无商品} other {# 件商品}}",
+    "priceRange": "价格",
+    "avgRating": "平均评分",
+    "bsrRange": "BSR 区间",
+    "topMovers": "重点关注"
+  },
+  "runs": {
+    "source": {
+      "product": "商品抓取",
+      "search": "关键词搜索",
+      "category": "类目抓取",
+      "reviews": "评论抓取",
+      "offers": "卖家抓取",
+      "sync": "同步"
+    },
+    "summary": "{success}/{total} 成功",
+    "withErrors": "{success}/{total} 成功 · {errors} 错误",
+    "noRuns": "暂无运行记录"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{m} 分钟前",
+    "hoursAgo": "{h} 小时前",
+    "daysAgo": "{d} 天前"
+  },
+  "language": {
+    "switch": "语言",
+    "en": "English",
+    "zh": "中文"
+  }
+}
