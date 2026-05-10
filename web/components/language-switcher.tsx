@@ -2,25 +2,27 @@
 
 import { Globe } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { usePathname, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 import { cn } from '@/lib/cn';
 
 export function LanguageSwitcher() {
   const t = useTranslations('language');
   const locale = useLocale();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname(); // locale-stripped pathname, e.g. "/"
+  const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
 
   function switchTo(next: string) {
     if (next === locale) return;
-    // Strip current locale prefix if present
-    const stripped = pathname.replace(/^\/(en|zh)(\/|$)/, '/');
-    const target = next === 'en' ? stripped : `/${next}${stripped}`;
+    const qs = searchParams.toString();
+    const target = qs ? `${pathname}?${qs}` : pathname;
     startTransition(() => {
-      router.push(target);
-      router.refresh();
+      // next-intl router accepts a `locale` option and handles prefix correctly
+      router.replace(target, { locale: next as (typeof routing.locales)[number] });
     });
   }
 
@@ -43,6 +45,7 @@ export function LanguageSwitcher() {
             locale === l.code
               ? 'bg-zinc-900 text-white'
               : 'text-zinc-600 hover:bg-zinc-100',
+            pending && 'opacity-60',
           )}
         >
           {l.label}

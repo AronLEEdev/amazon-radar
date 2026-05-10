@@ -118,7 +118,7 @@ export async function getProductsByWatchlist(): Promise<ProductRow[]> {
       select distinct on (asin, amazon_domain)
              asin, amazon_domain, captured_at, price_amount, price_currency,
              rating, reviews_count, bsr_rank, bsr_category, in_stock,
-             raw->'main_image'->>'link' as image_url
+             raw->'product'->'main_image'->>'link' as image_url
         from product_snapshots
        order by asin, amazon_domain, captured_at desc
     )
@@ -182,7 +182,7 @@ export async function getProduct(
     with latest as (
       select asin, amazon_domain, captured_at, price_amount, price_currency,
              rating, reviews_count, bsr_rank, bsr_category, in_stock,
-             raw->'main_image'->>'link' as image_url
+             raw->'product'->'main_image'->>'link' as image_url
         from product_snapshots
        where asin = $1 and amazon_domain = $2
        order by captured_at desc
