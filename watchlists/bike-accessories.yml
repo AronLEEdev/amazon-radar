@@ -11,10 +11,10 @@ amazon_domain: amazon.com
 #   - { asin: "B0XXXXXXXX", amazon_domain: "amazon.co.uk" }   (per-ASIN override)
 asins:
   # TODO: replace placeholders below with real ASINs before running snapshot
-  - B07CSZHHZ7    # placeholder — Quad Lock-style phone mount
-  - B07VW7H1T2    # placeholder
+  - B07CSZHHZ7 # placeholder — Quad Lock-style phone mount
+  - B07VW7H1T2 # placeholder
   - asin: B08L8KNYDH
-    amazon_domain: amazon.co.uk
+    amazon_domain: amazon.com
 
 # Phase 2 — search discovery (not yet implemented)
 keywords:

@@ -1,0 +1,36 @@
+slug: pet-backpack
+name: Pet Backpack
+description: Pet carrier backpacks (cat / small dog) on amazon.com — showcase niche
+
+amazon_domain: amazon.com
+
+# Top organic results from Rainforest type=search "pet backpack" on amazon.com
+# (sponsored skipped). Mix of incumbents (high reviews) + emerging listings.
+asins:
+  # incumbents
+  - B07KHPLFMS   # Texsens Bubble Backpack — 17.8k reviews, 4.6
+  - B0G2537W5H   # Morpilot Expandable — 7.5k, 4.6
+  - B086TRPX7Y   # Pecute Expandable Foldable — 3.2k, 4.7
+  - B0BR7LHM3V   # Cawypety Large Bubble — 2.6k, 4.5
+  - B09YYKFLMQ   # Cat Carrier w/ Sun Shade — 1.8k, 4.7
+  - B092CJTM4D   # Lollimeow Expandable Bubble — 1.4k, 4.6
+  # emerging / niche
+  - B09WH2R7ZR   # Guinea Pig Space Capsule — 506, 4.7  (sub-niche)
+  - B0F7XJHX9L   # Pecute Large Bubble (new SKU) — 438, 4.7
+  - B0D3V6YJ62   # high rating low reviews — 443, 4.8  (opportunity candidate)
+  - B0FJCQ5GWH   # Vivicreate Transparent (new) — 66, 4.3  (early signal)
+
+# Phase 2 — used by future search-discovery job
+keywords:
+  - pet backpack
+  - cat backpack carrier
+  - dog backpack carrier
+  - bubble pet backpack
+  - astronaut pet backpack
+
+# Phase 2 — category bestseller / new release / movers crawl
+# id 2975312011 = "Cats > Carriers & Travel Products" on amazon.com (verify in Supabase later)
+categories:
+  - id: "2975312011"
+    name: Cat Carriers & Travel Products
+    types: [bestsellers, new_releases, movers_and_shakers]
