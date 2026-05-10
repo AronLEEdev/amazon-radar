@@ -8,6 +8,13 @@ Entries are grouped by **major version**; minor/patch work is recorded in the
 
 ## [Unreleased]
 
+### Added
+- `TOP_N` and `SLUG` env vars for `npm run snapshot`. Targets are ordered (never-snapshotted → manual → discovered, then by review count) so a `TOP_N=20` daily run hits the highest-value 20 first. Lets the daily snapshot fit predictably inside a Rainforest plan budget.
+- `bin/sync-watchlists.ts` now soft-removes memberships of watchlists whose YAML file has been deleted (orphan sweep). Watchlist row stays for analytics history; only its active memberships are zeroed out.
+
+### Removed
+- `watchlists/bike-accessories.yml` (Week-1 placeholder niche). The `bike-accessories` watchlist row remains in the DB; orphan sweep zeroed its memberships.
+
 ### Added — Phase 2 discovery
 - `bin/run-search.ts` (`npm run search`): for each watchlist keyword, calls Rainforest `type=search` and stores top-N organic hits in `search_results`; auto-adds `product_watchlist_memberships` rows with `source_type='keyword_search'` and `source_value=<keyword>`.
 - `bin/run-category.ts` (`npm run category`): for each watchlist category, calls Rainforest `type=category` and stores the default browse results in `category_rank_snapshots`; auto-adds memberships with `source_type='category_rank'`. (Note: Rainforest's amazon.com endpoints don't expose true `bestsellers/new_releases/movers_and_shakers` lists keyed by Amazon node id, so the YAML's `types:` field is currently folded onto a single `bestsellers` row per category.)

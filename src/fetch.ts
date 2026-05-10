@@ -101,12 +101,61 @@ async function persistProduct(result: ProductResult): Promise<void> {
   }
 }
 
-/** Returns the distinct (asin, amazon_domain) targets currently active across all watchlists. */
-export async function loadActiveTargets(): Promise<ProductTarget[]> {
+export interface LoadTargetsOpts {
+  /** When set (>0), keep only the top N targets after ordering. */
+  topN?: number;
+  /** Filter to a single watchlist slug. */
+  slug?: string;
+}
+
+/**
+ * Returns the distinct (asin, amazon_domain) targets currently active across all
+ * watchlists.
+ *
+ * Ordering when `topN` is in play prioritises:
+ *   1. ASINs never snapshotted yet — gives discovered ASINs their first datapoint
+ *      so they don't get starved out by the limit.
+ *   2. Manual entries before discovered (keyword_search / category_rank).
+ *   3. Highest review_count (proxy for incumbents worth tracking).
+ *   4. Stable tie-breaker on asin to make runs reproducible.
+ */
+export async function loadActiveTargets(opts: LoadTargetsOpts = {}): Promise<ProductTarget[]> {
+  const { topN, slug } = opts;
+  const params: unknown[] = [];
+  let where = `m.removed_at is null`;
+  if (slug) {
+    params.push(slug);
+    where += ` and w.slug = $${params.length}`;
+  }
+  let limitClause = '';
+  if (topN && topN > 0) {
+    params.push(topN);
+    limitClause = `limit $${params.length}`;
+  }
   const { rows } = await getPool().query<{ asin: string; amazon_domain: string }>(
-    `select distinct asin, amazon_domain
-       from product_watchlist_memberships
-      where removed_at is null`,
+    `with latest as (
+       select distinct on (asin, amazon_domain) asin, amazon_domain,
+              reviews_count, captured_at
+         from product_snapshots
+        order by asin, amazon_domain, captured_at desc
+     ),
+     active as (
+       select m.asin, m.amazon_domain,
+              bool_or(m.source_type = 'manual_asin') as is_manual
+         from product_watchlist_memberships m
+         join watchlists w on w.id = m.watchlist_id
+        where ${where}
+        group by m.asin, m.amazon_domain
+     )
+     select a.asin, a.amazon_domain
+       from active a
+       left join latest l on l.asin = a.asin and l.amazon_domain = a.amazon_domain
+      order by (l.captured_at is null) desc,
+               a.is_manual desc,
+               l.reviews_count desc nulls last,
+               a.asin
+      ${limitClause}`,
+    params,
   );
   return rows.map((r) => ({ asin: r.asin, amazon_domain: r.amazon_domain }));
 }

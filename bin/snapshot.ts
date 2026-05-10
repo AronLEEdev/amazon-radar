@@ -18,8 +18,14 @@ async function main(): Promise<number> {
   await syncWatchlists();
 
   console.log('[2/3] resolve targets');
-  const targets = await loadActiveTargets();
-  console.log(`     ${targets.length} active target(s)`);
+  const topN = process.env.TOP_N ? Math.max(0, Number(process.env.TOP_N)) : undefined;
+  const slug = process.env.SLUG ?? undefined;
+  const targets = await loadActiveTargets({ topN, slug });
+  const filterParts: string[] = [];
+  if (slug) filterParts.push(`slug=${slug}`);
+  if (topN) filterParts.push(`top ${topN}`);
+  const filter = filterParts.length > 0 ? ` (${filterParts.join(', ')})` : '';
+  console.log(`     ${targets.length} active target(s)${filter}`);
   if (targets.length === 0) {
     console.log('nothing to do');
     return 0;

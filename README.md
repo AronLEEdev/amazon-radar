@@ -78,7 +78,8 @@ npm run category         # Phase 2: type=category per category_id, auto-add memb
 
 Useful env vars:
 - `TOP_N=20 npm run search` — top-N hits per keyword (default 10 for search, 50 for category).
-- `SLUG=pet-backpack npm run search` — restrict to one watchlist.
+- `SLUG=pet-backpack npm run search` — restrict to one watchlist (also works for `category` and `snapshot`).
+- `TOP_N=20 npm run snapshot` — only fetch the top N highest-priority targets. Ordering: ASINs never snapshotted first (so newly-discovered ones get their first datapoint), then manual entries by review count, then discovered ASINs by review count. Use to keep daily Rainforest cost predictable.
 
 Inspect runs:
 

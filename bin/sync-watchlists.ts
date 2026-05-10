@@ -36,6 +36,28 @@ export async function syncWatchlists(): Promise<SyncStats> {
       console.log('No watchlist files found in watchlists/');
     }
 
+    // Soft-remove memberships of watchlists whose YAML file no longer exists.
+    // The watchlist row itself is left in place (analytics may still reference it).
+    const yamlSlugs = files.map((f) => f.slug);
+    const orphan = await pool.query<{ slug: string; removed: string }>(
+      `with affected as (
+         update product_watchlist_memberships m
+            set removed_at = now()
+           from watchlists w
+          where m.watchlist_id = w.id
+            and m.removed_at is null
+            and ($1::text[] is null or not (w.slug = any($1::text[])))
+            ${yamlSlugs.length === 0 ? '' : ''}
+         returning w.slug, m.id
+       )
+       select slug, count(*)::text as removed from affected group by slug`,
+      [yamlSlugs.length > 0 ? yamlSlugs : null],
+    );
+    for (const row of orphan.rows) {
+      stats.membershipsRemoved += Number(row.removed);
+      console.log(`  orphan ${row.slug}: -${row.removed} memberships (YAML missing)`);
+    }
+
     for (const wl of files) {
       const client = await pool.connect();
       try {
