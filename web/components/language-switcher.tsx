@@ -23,6 +23,9 @@ export function LanguageSwitcher() {
     startTransition(() => {
       // next-intl router accepts a `locale` option and handles prefix correctly
       router.replace(target, { locale: next as (typeof routing.locales)[number] });
+      // Bust router cache so the [locale] layout (which holds the messages
+      // provider) re-renders with fresh translations.
+      router.refresh();
     });
   }
 
