@@ -66,8 +66,9 @@ export async function upsertTrackerRun(
   const identity = trackerIdentity(watchlistId, tracker);
   const { rows } = await getPool().query<TrackerRunRow>(
     `insert into tracker_runs
-      (watchlist_id, tracker_identity, business_day, timezone)
-     values ($1, $2, business_day(now(), $3), $3)
+      (watchlist_id, tracker_identity, business_day, timezone,
+       search_run_id, product_run_id, leaderboard_size, notes, finished_at)
+     values ($1, $2, business_day(now(), $3), $3, $4, $5, $6, $7, $8)
      on conflict (watchlist_id, tracker_identity, business_day) do update
        set search_run_id    = coalesce($4, tracker_runs.search_run_id),
            product_run_id   = coalesce($5, tracker_runs.product_run_id),
